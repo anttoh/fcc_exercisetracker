@@ -95,16 +95,16 @@ app.get('/api/exercise/log',(req,res) => {
   Users.findOne({id: userId}, (err, user) => {
     if(err) return;
     if(user) {
-      var limit = Number(req.query.limit);
-
-        Exercises.find({id: userId}).limit(limit).select('-_id description duration date').exec((err, log) => {
+      var limit = req.query.limit ? Number(req.query.limit) : 99999;
+        Exercises.find({id: userId}).select('-_id description duration date').exec((err, log) => {
           if(err) return;
           if (req.query.from !== undefined) {
-            log = log.filter((exercise) => exercise.date >= new Date(req.query.from));
+            log = log.filter((exercise) => new Date(exercise.date) >= new Date(req.query.from));
           }
           if (req.query.to !== undefined) {
-            log = log.filter((exercise) => exercise.date <= new Date(req.query.to));
+            log = log.filter((exercise) => new Date(exercise.date) <= new Date(req.query.to));
           }
+          log = log.slice(0, limit);
           var count = log.length;
           res.json({id: userId, username: user.username, count: count, log: log});
         });
@@ -120,6 +120,3 @@ var generateId = function () {
   return Math.random().toString(36).substr(2, 9);
 };
 
-
-  console.log('Your app is listening on port ' + listener.address().port)
-})
